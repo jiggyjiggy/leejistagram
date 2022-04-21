@@ -7,7 +7,6 @@ from django.conf            import settings
 from django.views           import View
 from django.core.exceptions import ValidationError
 
-# from users.utils            impot=
 from users.models           import User
 from users.validators       import (
                                 validate_email,

@@ -11,35 +11,57 @@ from users.models    import User
 
 class PostingView(View):
     def post(self, request):
-        data = json.loads(request.body)
+        try:
+            data = json.loads(request.body)
 
-        user = User.objects.get(username=data.get('user', None))
+            user_email     = data["email"]
+            board          = data["board"]
+            image_url_list = data["image_url"]
 
-        image = data["image"]
-        board = data["board"]
-        user_name = data["name"]
+            user  = User.objects.get(email=user_email)
 
-        Posting.objects.create(
-            image = image,
-            board = board
-        )
-
-
-        return JsonResponse({'message': 'SUCCESS'}, status=201)
-
-    def get(self, request):
-        postings = Posting.objects.all()
-        print(postings)
-        results = []
-
-        for posting in postings:
-            results.append(
-                {
-                    "user_name"          : posting.user.name,
-                    "posting_image"      : posting.image,
-                    "posting_board"      : posting.board,
-                    "posting_created_at" : posting.created_at
-                }
+            posting = Posting.objects.create(
+                board=board,
+                user  = user
             )
 
-        return JsonResponse({'results' : results}, status=200)
+            for image_url in image_url_list:
+                Image.objects.create(
+                    image_url = image_url,
+                    posting   = posting
+                )
+            return JsonResponse({'message': 'SUCCESS'}, status=201)
+
+        except KeyError:
+            return JsonResponse({'message' : 'KEY_ERROR'}, status=400)
+
+
+    def get(self, request):
+        try:
+            postings = Posting.objects.all()
+            results = []
+
+            for posting in postings:
+                images = posting.image_set.all()
+                images_list = []
+
+                for image in images:
+                    images_list.append(
+                        {
+                            "posting_image_url" : image.image_url
+                        }
+                    )
+
+                    results.append(
+                        {
+                            "user_name"          : posting.user.name,
+                            "posting_board"      : posting.board,
+                            "posting_created_at" : posting.created_at,
+                            "image_url" : images_list
+                        }
+                    )
+
+            return JsonResponse({'results' : results}, status=200)
+
+        except KeyError:
+            return JsonResponse({'message' : 'KEY_ERROR'}, status=400)

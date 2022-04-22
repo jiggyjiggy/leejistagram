@@ -17,14 +17,12 @@ class PostingView(View):
         try:
             data = json.loads(request.body)
 
-            user_email     = data["email"]
+            user           = request.user
             board          = data["board"]
             image_url_list = data["image_url"]
 
-            user  = User.objects.get(email=user_email)
-
             posting = Posting.objects.create(
-                board=board,
+                board = board,
                 user  = user
             )
 

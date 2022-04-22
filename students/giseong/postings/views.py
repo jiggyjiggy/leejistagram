@@ -8,8 +8,11 @@ from postings.models import Image
 
 from users.models    import User
 
+from users.utils import check_token
+
 
 class PostingView(View):
+    @check_token
     def post(self, request):
         try:
             data = json.loads(request.body)
@@ -52,14 +55,14 @@ class PostingView(View):
                         }
                     )
 
-                    results.append(
-                        {
-                            "user_name"          : posting.user.name,
-                            "posting_board"      : posting.board,
-                            "posting_created_at" : posting.created_at,
-                            "image_url" : images_list
-                        }
-                    )
+                results.append(
+                    {
+                        "user_name"          : posting.user.name,
+                        "posting_board"      : posting.board,
+                        "posting_created_at" : posting.created_at,
+                        "image_url" : images_list
+                    }
+                )
 
             return JsonResponse({'results' : results}, status=200)
 

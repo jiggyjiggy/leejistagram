@@ -105,7 +105,7 @@ class CommentView(View):
                     comments_info.append(
                         {
                             "user_email": user_email,
-                            "posting_id" : posting.id,
+                            "comment_id" :comment.id,
                             "posting_comment" : comment.comment,
                             "created_at": comment.created_at
                         }
@@ -113,6 +113,7 @@ class CommentView(View):
 
                 results.append(
                     {
+                        "posting_id" : posting.id,
                         "comments_list" : comments_info
                     }
                 )

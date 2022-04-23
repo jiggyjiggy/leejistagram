@@ -6,6 +6,7 @@ from django.views    import View
 from postings.models import Posting
 from postings.models import Image
 from postings.models import Comment
+from postings.models import Like
 
 from users.models import User
 
@@ -42,7 +43,6 @@ class PostingView(View):
             postings = Posting.objects.all()
 
             results = []
-
             for posting in postings:
                 images = posting.image_set.all()
                 images_list = []
@@ -53,10 +53,10 @@ class PostingView(View):
                             "posting_image_url" : image.image_url
                         }
                     )
-
                 results.append(
                     {
                         "user_name"          : posting.user.name,
+                        "posting_id"         : posting.id,
                         "posting_board"      : posting.board,
                         "posting_created_at" : posting.created_at,
                         "image_url" : images_list
@@ -121,4 +121,29 @@ class CommentView(View):
         except KeyError:
             return JsonResponse({'message': 'KEY_ERROR'}, status=400)
 
+
+class LikeView(View):
+    @check_token
+    def post(self, request):
+        try:
+            data = json.loads(request.body)
+
+            user = request.user
+            posting_id = data['posting_id']
+            posting = Posting.objects.get(id=posting_id)
+
+            user_like = Like.objects.filter(user=user, posting=posting_id)
+            user_like_existence = user_like.exists()
+            posting_likes = Like.objects.filter(posting=posting).count()
+
+            if user_like_existence:
+                user_like.delete()
+                return JsonResponse({'message': 'SUCCESS', 'isLiked': user_like_existence, 'posting_likes': posting_likes}, status=200)
+
+            else:
+                Like.objects.create(user=user, posting=posting)
+                return JsonResponse({'message': 'SUCCESS', 'isLiked': user_like_existence, 'posting_likes': posting_likes}, status=200)
+
+        except:
+            return JsonResponse({'message': 'KEY_ERROR'}, status=400)
 

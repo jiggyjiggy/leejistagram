@@ -25,3 +25,12 @@ class Comment(models.Model):
 
     class Meta:
         db_table = 'comments'
+
+class Like(models.Model):
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    user       = models.ForeignKey("users.User", on_delete=models.CASCADE)
+    posting    = models.ForeignKey('Posting', on_delete=models.CASCADE)
+
+    class Meta:
+        db_table = 'likes'

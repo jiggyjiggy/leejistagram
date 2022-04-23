@@ -37,7 +37,6 @@ class PostingView(View):
         except KeyError:
             return JsonResponse({'message' : 'KEY_ERROR'}, status=400)
 
-
     def get(self, request):
         try:
             postings = Posting.objects.all()
@@ -77,13 +76,13 @@ class CommentView(View):
             data = json.loads(request.body)
 
             user    = request.user
-            posting = Posting.objects.filter(id=data["posting_id"])
+            posting = Posting.objects.get(id=data["posting_id"])    # filter 쓰면 querset으로 반환
             comment = data["comment"]
 
             Comment.objects.create(
                 comment = comment,
                 user    = user,
-                posting = posting
+                posting = posting   # create 시에는 instance로 반환해줘야함
             )
 
             return JsonResponse({'message': 'SUCCESS'}, status=201)
@@ -91,17 +90,30 @@ class CommentView(View):
         except KeyError:
             return JsonResponse({'message': 'KEY_ERROR'}, status=400)
 
-    def get(self, request, posting_id):
+    def get(self, request):
         try:
-            comments = Comment.objects.filter(posting_id=posting_id)
+            postings = Posting.objects.all()
+
             results = []
 
-            for comment in comments:
+            for posting in postings:
+                comments = posting.comment_set.all()
+                comments_info = []
+
+                for comment in comments:
+                    user_email = User.objects.get(email=comment.user.email).email
+                    comments_info.append(
+                        {
+                            "user_email": user_email,
+                            "posting_id" : posting.id,
+                            "posting_comment" : comment.comment,
+                            "created_at": comment.created_at
+                        }
+                    )
+
                 results.append(
                     {
-                        "user_email" : User.objects.get(email=comment.user.email),
-                        "comment" : comment.comment,
-                        "created_at" : comment.created_at
+                        "comments_list" : comments_info
                     }
                 )
             return JsonResponse({'results' : results}, status=200)

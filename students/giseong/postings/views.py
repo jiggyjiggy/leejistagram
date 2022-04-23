@@ -38,13 +38,14 @@ class PostingView(View):
             return JsonResponse({'message' : 'KEY_ERROR'}, status=400)
 
 
-    def get(self, request, user_id):
+    def get(self, request):
         try:
-            postings = Posting.objects.filter(user_id=user_id)
+            postings = Posting.objects.all()
+
             results = []
 
             for posting in postings:
-                images = posting.image_set.filter(posting_id=posting.id)
+                images = posting.image_set.all()
                 images_list = []
 
                 for image in images:

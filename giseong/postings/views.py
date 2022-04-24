@@ -141,7 +141,7 @@ class LikeView(View):
                 user_like.delete()
 
                 like_info.append({
-                    "user_like_existence" : False,
+                    # "user_like_existence" : False,
                     "posting_likes" : posting_likes.count()
                 })
                 return JsonResponse({'message': 'SUCCESS', 'like_info': like_info}, status=200)
@@ -150,7 +150,7 @@ class LikeView(View):
                 Like.objects.create(user=user, posting_id=posting_id)
 
                 like_info.append({
-                    "user_like_existence": True,
+                    # "user_like_existence": True,
                     "posting_likes": posting_likes.count()
                 })
                 return JsonResponse({'message': 'SUCCESS', 'like_info': like_info}, status=200)
@@ -158,3 +158,18 @@ class LikeView(View):
         except:
             return JsonResponse({'message': 'KEY_ERROR'}, status=400)
 
+    @check_token
+    def get(self, request):
+        try:
+            user = request.user
+
+            like_postings = Like.objects.filter(user=user)
+            results = []
+            for like_posting in like_postings:
+                results.append({
+                    "like_posting" : like_posting.posting_id
+                })
+            return JsonResponse({'message': 'SUCCESS', 'results': results}, status=200)
+
+        except:
+            return JsonResponse({'message': 'KEY_ERROR'}, status=400)

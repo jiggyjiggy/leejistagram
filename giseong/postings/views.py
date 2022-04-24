@@ -10,7 +10,7 @@ from postings.models import Like
 
 from users.models import User
 
-from users.utils import check_token
+from users.utils  import check_token
 
 
 class PostingView(View):
@@ -105,7 +105,7 @@ class CommentView(View):
                     comments_info.append(
                         {
                             "user_email": user_email,
-                            "posting_id" : posting.id,
+                            "comment_id" :comment.id,
                             "posting_comment" : comment.comment,
                             "created_at": comment.created_at
                         }
@@ -113,6 +113,7 @@ class CommentView(View):
 
                 results.append(
                     {
+                        "posting_id" : posting.id,
                         "comments_list" : comments_info
                     }
                 )
@@ -133,16 +134,27 @@ class LikeView(View):
             posting = Posting.objects.get(id=posting_id)
 
             user_like = Like.objects.filter(user=user, posting=posting_id)
-            user_like_existence = user_like.exists()
-            posting_likes = Like.objects.filter(posting=posting).count()
+            posting_likes = Like.objects.filter(posting=posting)
 
-            if user_like_existence:
+            like_info = []
+
+            if user_like.exists():
                 user_like.delete()
-                return JsonResponse({'message': 'SUCCESS', 'isLiked': user_like_existence, 'posting_likes': posting_likes}, status=200)
+
+                like_info.append({
+                    "user_like_existence" : False,
+                    "posting_likes" : posting_likes.count()
+                })
+                return JsonResponse({'message': 'SUCCESS', 'like_info': like_info}, status=200)
 
             else:
                 Like.objects.create(user=user, posting=posting)
-                return JsonResponse({'message': 'SUCCESS', 'isLiked': user_like_existence, 'posting_likes': posting_likes}, status=200)
+
+                like_info.append({
+                    "user_like_existence": True,
+                    "posting_likes": posting_likes.count()
+                })
+                return JsonResponse({'message': 'SUCCESS', 'like_info': like_info}, status=200)
 
         except:
             return JsonResponse({'message': 'KEY_ERROR'}, status=400)

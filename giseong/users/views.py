@@ -8,6 +8,10 @@ from django.views           import View
 from django.core.exceptions import ValidationError
 
 from users.models           import User
+from users.models           import Follow
+
+from users.utils            import check_token
+
 from users.validators       import (
                                 validate_email,
                                 validate_password,
@@ -75,22 +79,52 @@ class LogInView(View):
             return JsonResponse({"message" : "INVALID_EMAIL"}, status=401)
 
 
-class TokenCheckView(View):
+# class TokenCheckView(View):
+#     def post(self, request):
+#         try:
+#             data = json.loads(request.body)
+#
+#             payload = jwt.decode(data['Authorization'], settings.SECRET_KEY, algorithms=settings.ALGORITHM)
+#             user = User.objects.get(id=payload['id'])
+#
+#             if User.objects.filter(id=user.id).exists():
+#                 return JsonResponse({'message' : 'WELCOME'}, status=200)
+#
+#         except User.DoesNotExist:
+#             return JsonResponse({'message' : 'INVALID_TOKEN'}, status=403)
+#
+#         except jwt.InvalidSignatureError:
+#             return JsonResponse({'message' : 'INVALID_SIGNATURE'}, status=403)
+#
+#         except jwt.DecodeError:
+#             return JsonResponse({'message' : 'INVALID_PAYLOAD'}, status=403)
+
+
+class FollowRecommendationView(View):
+    @check_token
     def post(self, request):
         try:
             data = json.loads(request.body)
 
-            payload = jwt.decode(data['Authorization'], settings.SECRET_KEY, algorithms=settings.ALGORITHM)
-            user = User.objects.get(id=payload['id'])
+            me = request.user
+            following = User.objects.get(id=data["following_id"])
 
-            if User.objects.filter(id=user.id).exists():
-                return JsonResponse({'message' : 'WELCOME'}, status=200)
+            already_following = Follow.objects.filter(me=me, following=following).exists()
+            if already_following:
+                following.delete()
+                return JsonResponse({'message': 'UNFOLLOWING'}, status=200)
 
-        except User.DoesNotExist:
-            return JsonResponse({'message' : 'INVALID_TOKEN'}, status=403)
+            else:
+                Follow.objects.create(me=me, following=following)
+                return JsonResponse({'message': 'FOLLOWING'}, status=200)
 
-        except jwt.InvalidSignatureError:
-            return JsonResponse({'message' : 'INVALID_SIGNATURE'}, status=403)
+        except KeyError:
+            return JsonResponse({'message': 'KEY_ERROR'}, status=400)
 
-        except jwt.DecodeError:
-            return JsonResponse({'message' : 'INVALID_PAYLOAD'}, status=403)
+    # def get(self, request):
+    #     try:
+    #
+    #         return JsonResponse({'message': 'SUCCESS', 'not_yet_follow': results}, status=200)
+    #
+    #     except Follow.DoesNotExist:
+    #         return JsonResponse({"message": "ALL_FOLLOWING"}, status=404)

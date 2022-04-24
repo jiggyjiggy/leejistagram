@@ -129,12 +129,11 @@ class LikeView(View):
         try:
             data = json.loads(request.body)
 
-            user = request.user
+            user       = request.user
             posting_id = data['posting_id']
-            posting = Posting.objects.get(id=posting_id)
 
-            user_like = Like.objects.filter(user=user, posting=posting_id)
-            posting_likes = Like.objects.filter(posting=posting)
+            user_like     = Like.objects.filter(user=user, posting_id=posting_id)
+            posting_likes = Like.objects.filter(posting_id=posting_id)
 
             like_info = []
 
@@ -148,7 +147,7 @@ class LikeView(View):
                 return JsonResponse({'message': 'SUCCESS', 'like_info': like_info}, status=200)
 
             else:
-                Like.objects.create(user=user, posting=posting)
+                Like.objects.create(user=user, posting_id=posting_id)
 
                 like_info.append({
                     "user_like_existence": True,
